@@ -1,0 +1,828 @@
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_GLOBAL
+-- ========================================
+
+WITH tab1 AS (
+SELECT  
+  fin.*
+  , pop.Capacite
+  , CASE
+      WHEN pop.Nb_total_spectateurs_22_23 > pop.Nb_total_spectateurs_24_25 THEN pop.Nb_total_spectateurs_22_23
+      ELSE pop.Nb_total_spectateurs_24_25
+    END AS Nb_total_spectateurs
+  , CASE
+      WHEN pop.Moy_aff_match_22_23 > pop.Moy_aff_match_24_25 THEN pop.Moy_aff_match_22_23
+      ELSE pop.Moy_aff_match_24_25
+    END AS Moy_aff_match
+  , CASE
+      WHEN pop.Pourcentage_remplissage_22_23 > pop.Pourcentage_remplissage_24_25 THEN pop.Pourcentage_remplissage_22_23
+      ELSE pop.Pourcentage_remplissage_24_25
+    END AS Pourcentage_remplissage
+  , age.avg_age
+  , iff.indice_formation 
+  , win_rate.avg_win_rate
+  , ppe.Position
+  , ppe.Points
+FROM ` project_id.dataset_id.KPI_financier_personae` AS fin
+LEFT JOIN project_id.dataset_id.KPI_popularite AS pop
+ON fin.Club = pop.Club
+LEFT JOIN project_id.dataset_id.SPORTIF_moyenne_age AS age
+ON fin.Club = age.Club_table_affluence
+LEFT JOIN project_id.dataset_id.SPORTIF_indice_formation_final AS iff
+ON fin.Club = iff.Club
+LEFT JOIN project_id.dataset_id.SPORTIF_win_rate_par_saison_finale_ne_pas_effacer_lautre AS win_rate
+ON fin.Club = win_rate.Club
+LEFT JOIN project_id.dataset_id.KPI_SPORTIF_participation_competition_europeenne AS ppe
+ON fin.Club = ppe.Club_table_affluence)
+
+SELECT
+*
+FROM tab1
+ORDER BY Valeur_Entreprise_Euros DESC
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_Jointure_Valeur_entreprise
+-- ========================================
+
+SELECT DISTINCT  
+  tab1.Club_table_affluence AS Club
+  , tab2.Valeur_Entreprise_Euros
+FROM ` project_id.dataset_id.PK_KPI_financier` AS tab1
+LEFT JOIN ` project_id.dataset_id.KPI_financier_valeur entreprise` AS tab2
+ON tab1.Club_table_valeur_entreprise = tab2.Club
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_Jointure_Valeur_entreprise_jointure_country
+-- ========================================
+
+SELECT  
+  tab1.Pays
+  , tab1.Championnat
+  , tab1.Club
+  , CASE
+      WHEN tab2.Valeur_Entreprise_Euros IS NULL THEN 0
+      ELSE tab2.Valeur_Entreprise_Euros
+    END AS Valeur_Entreprise_Euros
+FROM ` project_id.dataset_id.Club_geoloc_country_ladders` AS tab1
+LEFT JOIN ` project_id.dataset_id.KPI_financier_Jointure_Valeur_entreprise` AS tab2
+ON tab1.Club = tab2.Club
+ORDER BY Pays, Championnat, Club
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_Market_value_3_years_jointure_country
+-- ========================================
+
+SELECT  
+  tab2.Pays
+  , tab2.Championnat
+  , tab2.Club
+  , tab1.Season
+  , CASE
+      WHEN tab1.Average_market_value IS NULL THEN 0
+      ELSE tab1.Average_market_value
+    END AS Average_market_value
+  , CASE
+      WHEN tab1.Total_market_value IS NULL THEN 0
+      ELSE tab1.Total_market_value
+    END AS Total_market_value
+FROM ` project_id.dataset_id.KPI_financier_Market_value_3_years` AS tab1
+LEFT JOIN ` project_id.dataset_id.Club_geoloc_country_ladders` AS tab2
+ON tab1.Club_table_affluence = tab2.Club
+ORDER BY Pays, Championnat, Club, Season
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_average_market_value_per_player_all_season_jointure_country
+-- ========================================
+
+SELECT  
+  tab2.Pays
+  , tab2.Championnat
+  , tab2.Club
+  , tab1.last_season
+  , tab1.Average_market_value_per_player
+  , tab1.Number_of_player
+FROM ` project_id.dataset_id.KPI_financier_Average_Market_value_per_player_all_season` AS tab1
+LEFT JOIN ` project_id.dataset_id.Club_geoloc_country_ladders` AS tab2
+ON tab1.Club = tab2.Club
+ORDER BY Pays, Championnat, Club, last_season DESC
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_personae
+-- ========================================
+
+WITH tab1 AS (
+  SELECT
+  Pays
+    , Championnat
+    , Club
+    , ROUND(AVG(Average_market_value),2) AS Average_market_value
+    , ROUND(AVG(Total_market_value),2) AS Total_market_value
+  FROM ` project_id.dataset_id.KPI_financier_Market_value_3_years_jointure_country`
+  GROUP BY Pays
+    , Championnat
+    , Club
+  ORDER BY Pays
+    , Championnat
+    , Club
+),
+
+tab2 AS (
+  SELECT  
+    Pays
+      , Championnat
+      , Club
+      , SUM(total_transfert_achat) AS total_transfert_achat
+      , SUM(nb_transfert_achat) AS nb_transfert_achat
+      , SUM(total_transfert_vente) AS total_transfert_vente
+      , SUM(nb_transfert_vente) AS nb_transfert_vente
+  FROM ` project_id.dataset_id.KPI_financier_transfert_all_season_jointure_country` 
+  GROUP BY Pays
+    , Championnat
+    , Club
+  ORDER BY Pays
+    , Championnat
+    , Club  
+)
+SELECT  
+  tab3.*
+  , CASE
+      WHEN tab1.Average_market_value IS NULL THEN 0
+      ELSE tab1.Average_market_value
+    END AS Average_market_value
+  , CASE 
+      WHEN tab1.Total_market_value IS NULL THEN 0
+      ELSE tab1.Total_market_value
+    END AS Total_market_value
+  , CASE
+      WHEN tab2.total_transfert_achat IS NULL THEN 0
+      ELSE tab2.total_transfert_achat
+    END AS total_transfert_achat
+  , CASE
+      WHEN tab2.nb_transfert_achat IS NULL THEN 0
+      ELSE tab2.nb_transfert_achat
+    END AS nb_transfert_achat
+  , CASE
+      WHEN tab2.total_transfert_vente IS NULL THEN 0
+      ELSE tab2.total_transfert_vente
+    END AS total_transfert_vente
+  , CASE
+      WHEN tab2.nb_transfert_vente IS NULL THEN 0
+      ELSE tab2.nb_transfert_vente
+    END AS nb_transfert_vente
+FROM ` project_id.dataset_id.KPI_financier_Jointure_Valeur_entreprise_jointure_country` AS tab3
+LEFT JOIN tab1
+ON tab3.Club = tab1.Club
+LEFT JOIN tab2
+ON  tab3.Club = tab2.Club
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_top3_player_jointure_country
+-- ========================================
+
+SELECT  
+  tab2.Pays
+  , tab2.Championnat
+  , tab2.Club
+  , tab1.name
+  , tab1.last_season
+  , tab1.market_value_in_eur
+  , tab1.rn
+FROM ` project_id.dataset_id.KPI_financier_top3_player` AS tab1
+LEFT JOIN ` project_id.dataset_id.Club_geoloc_country_ladders` AS tab2
+ON tab1.Club = tab2.Club
+ORDER BY Pays, Championnat, Club
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_transfert_achat_all_season_jointure_country
+-- ========================================
+
+SELECT  
+  tab2.Pays
+  , tab2.Championnat
+  , tab2.Club
+  , tab1.transfer_season
+  , tab1.total_transfert_achat
+  , tab1.number_of_transfert
+FROM ` project_id.dataset_id.KPI_financier_transfert_achat_all_season` AS tab1
+LEFT JOIN ` project_id.dataset_id.Club_geoloc_country_ladders` AS tab2
+ON tab1.Club = tab2.Club
+ORDER BY Pays, Championnat, Club, transfer_season DESC
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_transfert_all_season_jointure
+-- ========================================
+
+WITH tab1 AS (
+SELECT 
+  Club
+  , transfer_season
+  , total_transfert_achat
+  , number_of_transfert AS nb_transfert_achat
+  , CONCAT(Club,transfer_season) AS pk
+FROM `project_id.dataset_id.KPI_financier_transfert_achat_all_season`
+)
+, 
+
+tab2 AS (
+SELECT 
+  Club
+  , transfer_season
+  , total_transfert_vente
+  , number_of_transfert AS nb_transfert_vente
+  , CONCAT(Club,transfer_season) AS pk
+FROM project_id.dataset_id.KPI_financier_transfert_vente_all_season
+)
+
+SELECT 
+  tab1.Club
+  , tab1.transfer_season
+  , tab1.total_transfert_achat
+  , tab1.nb_transfert_achat
+  , tab2.total_transfert_vente
+  , tab2.nb_transfert_vente
+FROM tab1
+LEFT JOIN tab2
+USING (pk)
+
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_transfert_all_season_jointure_country
+-- ========================================
+
+SELECT  
+  tab2.Pays
+  , tab2.Championnat
+  , tab2.Club
+  , tab1.transfer_season
+  , CASE
+      WHEN tab1.total_transfert_achat IS NULL THEN 0
+      ELSE tab1.total_transfert_achat
+    END total_transfert_achat
+  , CASE
+      WHEN tab1.nb_transfert_achat IS NULL THEN 0
+      ELSE tab1.nb_transfert_achat
+    END nb_transfert_achat
+  , CASE
+      WHEN tab1.total_transfert_vente IS NULL THEN 0
+      ELSE tab1.total_transfert_vente
+    END total_transfert_vente
+  , CASE
+      WHEN tab1.nb_transfert_vente IS NULL THEN 0
+      ELSE tab1.nb_transfert_vente 
+    END AS nb_transfert_vente 
+FROM ` project_id.dataset_id.KPI_financier_transfert_all_season_jointure` AS tab1
+LEFT JOIN project_id.dataset_id.transfermarket_data.Club_geoloc_country_ladders AS tab2
+ON tab1.Club = tab2.Club
+WHERE transfer_season IN("14/15","15/16","17/18","18/19","19/20","20/21","21/22","22/23","23/24","24/25")
+ORDER BY Pays, Championnat, Club, transfer_season DESC
+
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_financier_transfert_vente_all_season_jointure_country
+-- ========================================
+
+SELECT  
+  tab2.Pays
+  , tab2.Championnat
+  , tab2.Club
+  , tab1.transfer_season
+  , tab1.total_transfert_vente
+  , tab1.number_of_transfert
+FROM ` project_id.dataset_id.KPI_financier_transfert_vente_all_season` AS tab1
+LEFT JOIN ` project_id.dataset_id.Club_geoloc_country_ladders` AS tab2
+ON tab1.Club = tab2.Club
+ORDER BY Pays, Championnat, Club, transfer_season DESC
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_global_personaes
+-- ========================================
+
+#1ère etape: ajout du nom de l'investissuer dans 1 colonne
+WITH tab1 AS (
+  SELECT 
+    *
+    , CASE 
+        WHEN Club in ("SC Paderborn 07", "SD Huesca", "Cádiz CF", "Spezia Calcio", "AFC Bournemouth") THEN "Bob"
+        WHEN Club IN ("Bayern Munich", "FC Liverpool", "Manchester City", "FC Barcelone", "Real Madrid") THEN "Nasser"
+        WHEN Club IN ("1.FC Köln", "FC Schalke 04", "Hamburger SV", "AFC Bournemouth", "RC Lens") THEN "Ryan"
+      ELSE NULL 
+      END AS Personae
+  FROM ` project_id.dataset_id.KPI_GLOBAL`),
+
+#2ème etape: creation de 3 colonnes de boolean
+tab2 AS (
+SELECT 
+  tab1.*
+  , CASE 
+      WHEN Personae = "Bob" THEN TRUE
+    ELSE FALSE
+    END AS Bob
+  , CASE 
+      WHEN Personae = "Nasser" THEN TRUE
+    ELSE FALSE
+    END AS Nasser
+, CASE 
+    WHEN Personae = "Ryan" THEN TRUE
+  ELSE FALSE
+  END AS Ryan
+FROM tab1
+)
+#3ème etape: modifier la ligne Bournemouth et mettre TRUE dans la colonne Ryan
+
+SELECT
+  tab2.*
+  , CASE
+      WHEN Club = "AFC Bournemouth" THEN true
+      ELSE Ryan
+    END AS Ryan_new
+FROM tab2
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : KPI_popularite
+-- ========================================
+
+SELECT DISTINCT geo.Pays,
+  geo.Championnat,
+  geo.Club,
+  CASE
+    WHEN aff24_25.Stade IS NULL THEN aff22_23.Stade
+    ELSE aff24_25.Stade
+  END AS Stade,
+  CASE
+    WHEN aff24_25.Capacite IS NULL THEN aff22_23.Capacite
+    ELSE aff24_25.Capacite
+  END AS Capacite,
+  aff22_23.Nombre_total_spectateurs_saison AS Nb_total_spectateurs_22_23,
+  aff24_25.Nombre_total_spectateurs_saison AS Nb_total_spectateurs_24_25,
+  aff22_23.Moyenne_affluence_match AS Moy_aff_match_22_23,
+  aff24_25.Moyenne_affluence_match AS Moy_aff_match_24_25,
+  aff22_23.Pourcentage_remplissage AS Pourcentage_remplissage_22_23,
+  aff24_25.Pourcentage_remplissage AS Pourcentage_remplissage_24_25,
+  proprio.Proprietaire,
+  proprio.Is_proprietaire_stade,
+insta.nombre_followers AS Nb_followers_insta
+FROM ` project_id.dataset_id.Club_geoloc_country_ladders` AS geo
+LEFT JOIN ` project_id.dataset_id.PK_KPI_popularite` AS kpi 
+  ON geo.Club = kpi.Club_table_affluence
+LEFT JOIN ` project_id.dataset_id.POPULARITE_affluence_22-23` AS aff22_23
+  ON kpi.Club_table_affluence_22_23 = aff22_23.Club
+LEFT JOIN ` project_id.dataset_id.POPULARITE_affluence_24-25` AS aff24_25
+  ON kpi.Club_table_affluence = aff24_25.Club
+LEFT JOIN ` project_id.dataset_id.POPULARITE_propriété_club_stade` AS proprio
+  ON kpi.Club_table_infos_clubs = proprio.Club
+LEFT JOIN ` project_id.dataset_id.POPULARITE_nombre_followers_instagram` AS insta
+  ON kpi.Club_table_instagram_followers = insta.Club
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : POPULARITE_affluence_22-23
+-- ========================================
+
+# subquery pour transformer capacite et moyenne en format string (pour pouvoir utiliser REPLACE ensuite), on ajoute les zéros manquants pour pouvoir transformer ensuite en INT
+
+WITH aff_22_23_modified AS(
+  SELECT Stade____Club,
+    IF (Capacite = 400.0,0.4*1000,Capacite*1000) AS Capacite,
+    CASE
+      WHEN Spectateurs LIKE '%.__' THEN CONCAT(Spectateurs,'0')
+      WHEN Spectateurs LIKE '%._' THEN CONCAT(Spectateurs,'00')
+      WHEN Spectateurs LIKE '___' THEN CONCAT(Spectateurs,'000')
+      WHEN Spectateurs LIKE '__' THEN CONCAT(Spectateurs,'000')
+      WHEN Spectateurs LIKE '_' THEN CONCAT(Spectateurs,'000')
+      ELSE Spectateurs
+    END AS Spectateurs,
+    CASE
+      WHEN CAST(Moyenne AS STRING) LIKE '___' THEN CONCAT(CAST(Moyenne AS STRING),'')
+      ELSE CAST(Moyenne*1000 AS STRING)
+    END AS Moyenne,
+    Matchs,
+    A_guichets_fermes
+  FROM ` project_id.dataset_id.transfermarket_data.Affluence clubs 22-23`
+)
+SELECT #dans la colonne Stade____Club, on sépare le nom du club du nom du stade
+-- Column 1: Get the value after the ' <> ' delimiter (Index 1)
+-- This is the easiest way to get the team name 'Olympique de Marseille'
+  SPLIT(Stade____Club, ' <> ')[SAFE_OFFSET(1)] AS Club,
+-- Column 2: Get the value BEFORE the ' <> ' delimiter (Index 0),
+-- then remove the team name from that
+  REPLACE(
+    SPLIT(Stade____Club, ' <> ')[SAFE_OFFSET(0)],
+    SPLIT(Stade____Club, ' <> ')[SAFE_OFFSET(1)], -- The team name 
+    '') AS Stade,
+    #on transforme Capacité, spectateurs et moyenne en INT tout en supprimant les '.'
+  Capacite,
+  CAST(REPLACE(Spectateurs,'.','') AS FLOAT64) AS Nombre_total_spectateurs_saison,
+  CAST (Moyenne AS FLOAT64) AS Moyenne_affluence_match,
+  Matchs AS Nombre_matchs_domicile,
+  A_guichets_fermes,
+  ROUND(SAFE_DIVIDE(CAST (Moyenne AS FLOAT64),Capacite),2) AS Pourcentage_remplissage
+FROM aff_22_23_modified
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : POPULARITE_affluence_24-25
+-- ========================================
+
+# subquery pour transformer capacite et moyenne en format string (pour pouvoir utiliser REPLACE ensuite), on ajoute les zéros manquants pour pouvoir transformer ensuite en INT
+
+WITH aff_24_25_modified AS(
+  SELECT Stade____Club,
+    Capacite*1000 AS Capacite,
+    CASE
+      WHEN Spectateurs LIKE '%.__' THEN CONCAT(Spectateurs,'0')
+      WHEN Spectateurs LIKE '%._' THEN CONCAT(Spectateurs,'00')
+      WHEN Spectateurs LIKE '___' THEN CONCAT(Spectateurs,'000')
+      WHEN Spectateurs LIKE '__' THEN CONCAT(Spectateurs,'000')
+      WHEN Spectateurs LIKE '_' THEN CONCAT(Spectateurs,'000')
+      ELSE Spectateurs
+    END AS Spectateurs,
+    CASE
+      WHEN CAST(Moyenne AS STRING) LIKE '___' THEN CONCAT(CAST(Moyenne AS STRING),'')
+      ELSE CAST(Moyenne*1000 AS STRING)
+    END AS Moyenne,
+    Matchs,
+    A_guichets_fermes
+  FROM ` project_id.dataset_id.Affluence clubs 24-25`
+)
+SELECT #dans la colonne Stade____Club, on sépare le nom du club du nom du stade
+-- Column 1: Get the value after the ' <> ' delimiter (Index 1)
+-- This is the easiest way to get the team name 'Olympique de Marseille'
+  SPLIT(Stade____Club, ' <> ')[SAFE_OFFSET(1)] AS Club,
+-- Column 2: Get the value BEFORE the ' <> ' delimiter (Index 0),
+-- then remove the team name from that
+  REPLACE(
+    SPLIT(Stade____Club, ' <> ')[SAFE_OFFSET(0)],
+    SPLIT(Stade____Club, ' <> ')[SAFE_OFFSET(1)], -- The team name 
+    '') AS Stade,
+    #on transforme Capacité, spectateurs et moyenne en INT tout en supprimant les '.'
+  Capacite,
+  CAST(REPLACE(Spectateurs,'.','') AS FLOAT64) AS Nombre_total_spectateurs_saison,
+  CAST (Moyenne AS FLOAT64) AS Moyenne_affluence_match,
+  Matchs AS Nombre_matchs_domicile,
+  A_guichets_fermes,
+  ROUND(SAFE_DIVIDE(CAST (Moyenne AS FLOAT64),Capacite),2) AS Pourcentage_remplissage
+FROM aff_24_25_modified
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : POPULARITE_nombre_followers_instagram
+-- ========================================
+
+SELECT 
+  ## Je renomme la colonne Ligue en Championnat et remplace les noms de la colonne par les noms des championnats concernés.
+  CASE 
+    WHEN Ligue LIKE 'Premier League D1' THEN REPLACE(Ligue,'Premier League D1','Premier League')
+    WHEN Ligue LIKE 'Premier League D2' THEN REPLACE(Ligue,'Premier League D2','Championship')
+    WHEN Ligue LIKE 'Premier League D3' THEN REPLACE(Ligue,'Premier League D3','League One')
+    WHEN Ligue LIKE 'Ligue 1 D1' THEN REPLACE(Ligue,'Ligue 1 D1','Ligue 1')
+    WHEN Ligue LIKE 'Ligue 1 D2' THEN REPLACE(Ligue,'Ligue 1 D2','Ligue 2')
+    WHEN Ligue LIKE 'Ligue 1 D3' THEN REPLACE(Ligue,'Ligue 1 D3','National')
+    WHEN Ligue LIKE 'La Liga D1' THEN REPLACE(Ligue,'La Liga D1','La Liga')
+    WHEN Ligue LIKE 'La Liga D2' THEN REPLACE(Ligue,'La Liga D2','La Liga 2')
+    WHEN Ligue LIKE 'La Liga D3' THEN REPLACE(Ligue,'La Liga D3','Primera Federacion')
+    WHEN Ligue LIKE 'Bundesliga D1' THEN REPLACE(Ligue,'Bundesliga D1','Bundesliga')
+    WHEN Ligue LIKE 'Bundesliga D2' THEN REPLACE(Ligue,'Bundesliga D2','2.Bundesliga')
+    WHEN Ligue LIKE 'Bundesliga D3' THEN REPLACE(Ligue,'Bundesliga D3','3.Liga')
+    WHEN Ligue LIKE 'Serie A D1' THEN REPLACE(Ligue,'Serie A D1','Serie A')
+    WHEN Ligue LIKE 'Serie A D2' THEN REPLACE(Ligue,'Serie A D2','Serie B')
+    WHEN Ligue LIKE 'Serie A D3' THEN REPLACE(Ligue,'Serie A D3','Serie C')
+    ELSE Ligue
+  END AS Championnat,
+  Club,
+  # Je ne conserve pas les colonnes division et nom instagram qui ne nous sont pas utiles
+  # et je renomme la colonne Followers par nombre_followers pour une meilleure compréhension, et je supprimes les espaces entre les chiffres.
+  CAST(REPLACE(Followers,' ','') AS INT) AS nombre_followers
+FROM ` project_id.dataset_id.Instagram_followers_club_colonnes_names_added_Nina`
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : POPULARITE_propriété_club_stade
+-- ========================================
+
+SELECT 
+  Club,
+  Proprietaire,
+  Proprietaire_stade AS Is_proprietaire_stade
+FROM ` project_id.dataset_id.Infos_propriete_stade_clubs`
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : SPORTIF_indice_formation
+-- ========================================
+
+SELECT * 
+FROM ` project_id.dataset_id.SPORTIF_pourcentageminutes_joueurs_formés_club`  AS indice_formation
+LEFT JOIN project_id.dataset_id.KPI_sportif AS primary_key
+ON indice_formation.club_name = primary_key.Club_table_affluence
+
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : SPORTIF_indice_formation_final
+-- ========================================
+
+
+WITH indice_formation_finale AS (
+  SELECT 
+    primary_key.Club_table_affluence,
+    indice_formation.sum_minutes,
+    indice_formation.sum_players,
+    indice_formation.avg_minutes_per_player,
+    SAFE_CAST(indice_formation.indice_formation AS FLOAT64) AS indice_formation
+  FROM project_id.dataset_id.KPI_sportif AS primary_key
+  LEFT JOIN
+    ` project_id.dataset_id.SPORTIF_pourcentageminutes_joueurs_formés_club` AS indice_formation
+      ON indice_formation.club_name = primary_key.Club_table_centre_formation
+)
+
+SELECT 
+  GEO.Pays,
+  GEO.Championnat,
+  GEO.Club,
+  indice_formation,
+  indice_formation_finale.sum_minutes,
+  indice_formation_finale.sum_players,
+  indice_formation_finale.avg_minutes_per_player
+FROM project_id.dataset_id.Club_geoloc_country_ladders AS GEO
+LEFT JOIN indice_formation_finale
+  ON GEO.Club = indice_formation_finale.Club_table_affluence;
+
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : SPORTIF_points_participation_europeenne
+-- ========================================
+
+SELECT participation_competition_europeenne.Club_clean AS Club_name,
+participation_competition_europeenne.Pays AS Pays,
+participation_competition_europeenne.Position AS Position,
+participation_competition_europeenne.points AS Points
+ FROM ` project_id.dataset_id.KPI_SPORTIF_participation_competition_europeenne` AS participation_competition_europeenne
+LEFT JOIN project_id.dataset_id.KPI_sportif AS primary_key
+ON participation_competition_europeenne.Club_clean = primary_key.Club_table_coef_UEFA
+ORDER BY participation_competition_europeenne.points DESC
+
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : SPORTIF_points_participation_européenne_finale
+-- ========================================
+
+WITH participation_competition_finale AS (SELECT participation_competition_europeenne.Club_clean AS Club_name,
+participation_competition_europeenne.Pays AS Pays,
+participation_competition_europeenne.Position AS Position,
+participation_competition_europeenne.points AS Points
+
+ FROM ` project_id.dataset_id.KPI_SPORTIF_participation_competition_europeenne` AS participation_competition_europeenne
+LEFT JOIN project_id.dataset_id.KPI_sportif AS primary_key
+ON participation_competition_europeenne.Club_clean = primary_key.Club_table_affluence
+ORDER BY participation_competition_europeenne.points DESC
+)
+
+SELECT Geo.Pays
+, Geo.Championnat
+, participation_competition_finale.Club_name
+, participation_competition_finale.Position
+, participation_competition_finale.Points
+
+FROM project_id.dataset_id.Club_geoloc_country_ladders AS Geo
+LEFT JOIN participation_competition_finale
+ON Geo.Club = participation_competition_finale.Club_name
+ORDER BY participation_competition_finale.points DESC
+
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : SPORTIF_win_rate_par_saison
+-- ========================================
+
+SELECT geo.pays,
+geo.championnat,
+win.*
+FROM project_id.dataset_id.SPORTIF_win_rate_par_saison AS win
+LEFT JOIN project_id.dataset_id.Club_geoloc_country_ladders AS geo
+ON win.club= geo.club
+
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : SPORTIF_win_rate_par_saison_FINALE
+-- ========================================
+
+SELECT
+  ANY_VALUE(pays) AS pays,
+  ANY_VALUE(championnat) AS championnat,
+  Club,
+  SUM(total_games) AS total_games,
+  SUM(total_wins) AS total_wins,
+  AVG(win_rate) AS avg_win_rate
+FROM
+  ` project_id.dataset_id.Sportif_win_rate_par_saison` AS win_rate_saison
+GROUP BY
+  Club;
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : TOP5_Bob
+-- ========================================
+
+WITH tab1 AS (
+SELECT  
+  fin.*
+  , pop.Capacite
+  , CASE
+      WHEN pop.Nb_total_spectateurs_22_23 > pop.Nb_total_spectateurs_24_25 THEN pop.Nb_total_spectateurs_22_23
+      ELSE pop.Nb_total_spectateurs_24_25
+    END AS Nb_total_spectateurs
+  , CASE
+      WHEN pop.Moy_aff_match_22_23 > pop.Moy_aff_match_24_25 THEN pop.Moy_aff_match_22_23
+      ELSE pop.Moy_aff_match_24_25
+    END AS Moy_aff_match
+  , CASE
+      WHEN pop.Pourcentage_remplissage_22_23 > pop.Pourcentage_remplissage_24_25 THEN pop.Pourcentage_remplissage_22_23
+      ELSE pop.Pourcentage_remplissage_24_25
+    END AS Pourcentage_remplissage
+  , age.avg_age
+  , iff.indice_formation 
+  , win_rate.avg_win_rate
+  , ppe.Position
+  , ppe.Points
+FROM ` project_id.dataset_id.KPI_financier_personae` AS fin
+LEFT JOIN project_id.dataset_id.KPI_popularite AS pop
+ON fin.Club = pop.Club
+LEFT JOIN project_id.dataset_id.SPORTIF_moyenne_age AS age
+ON fin.Club = age.Club_table_affluence
+LEFT JOIN project_id.dataset_id.SPORTIF_indice_formation_final AS iff
+ON fin.Club = iff.Club
+LEFT JOIN project_id.dataset_id.SPORTIF_win_rate_par_saison_finale_ne_pas_effacer_lautre AS win_rate
+ON fin.Club = win_rate.Club
+LEFT JOIN project_id.dataset_id.KPI_SPORTIF_participation_competition_europeenne AS ppe
+ON fin.Club = ppe.Club_table_affluence)
+
+SELECT
+*
+FROM tab1
+WHERE Valeur_Entreprise_Euros  <= 200000000
+  AND Valeur_Entreprise_Euros != 0      
+AND avg_win_rate >= 0.40   
+AND indice_formation > 50
+ORDER BY Valeur_Entreprise_Euros 
+LIMIT 5
+
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : TOP5_Nasser
+-- ========================================
+
+WITH tab1 AS (
+SELECT  
+  fin.*
+  , pop.Capacite
+  , CASE
+      WHEN pop.Nb_total_spectateurs_22_23 > pop.Nb_total_spectateurs_24_25 THEN pop.Nb_total_spectateurs_22_23
+      ELSE pop.Nb_total_spectateurs_24_25
+    END AS Nb_total_spectateurs
+  , CASE
+      WHEN pop.Moy_aff_match_22_23 > pop.Moy_aff_match_24_25 THEN pop.Moy_aff_match_22_23
+      ELSE pop.Moy_aff_match_24_25
+    END AS Moy_aff_match
+  , CASE
+      WHEN pop.Pourcentage_remplissage_22_23 > pop.Pourcentage_remplissage_24_25 THEN pop.Pourcentage_remplissage_22_23
+      ELSE pop.Pourcentage_remplissage_24_25
+    END AS Pourcentage_remplissage
+  , age.avg_age
+  , CAST(iff.indice_formation AS FLOAT64) indice_formation
+  , win_rate.avg_win_rate
+  , ppe.Position
+  , ppe.Points
+FROM ` project_id.dataset_id.KPI_financier_personae` AS fin
+LEFT JOIN project_id.dataset_id.KPI_popularite AS pop
+ON fin.Club = pop.Club
+LEFT JOIN project_id.dataset_id.SPORTIF_moyenne_age AS age
+ON fin.Club = age.Club_table_affluence
+LEFT JOIN project_id.dataset_id.SPORTIF_indice_formation_final AS iff
+ON fin.Club = iff.Club
+LEFT JOIN project_id.dataset_id.SPORTIF_win_rate_par_saison_finale_ne_pas_effacer_lautre AS win_rate
+ON fin.Club = win_rate.Club
+LEFT JOIN project_id.dataset_id.KPI_SPORTIF_participation_competition_europeenne AS ppe
+ON fin.Club = ppe.Club_table_affluence)
+
+SELECT
+*
+FROM tab1
+WHERE Capacite  > 50000      
+AND Pourcentage_remplissage > 0.70       
+AND indice_formation > 50
+AND avg_win_rate > 0.60        
+AND Position < 20  
+ORDER BY avg_age
+
+
+-- ========================================
+-- DATA FC - Finalisation des données clubs
+-- Table : TOP5_Ryan
+-- ========================================
+
+WITH tab1 AS (
+SELECT  
+  fin.*
+  , pop.Capacite
+  , CASE
+      WHEN pop.Nb_total_spectateurs_22_23 > pop.Nb_total_spectateurs_24_25 THEN pop.Nb_total_spectateurs_22_23
+      ELSE pop.Nb_total_spectateurs_24_25
+    END AS Nb_total_spectateurs
+  , CASE
+      WHEN pop.Moy_aff_match_22_23 > pop.Moy_aff_match_24_25 THEN pop.Moy_aff_match_22_23
+      ELSE pop.Moy_aff_match_24_25
+    END AS Moy_aff_match
+  , CASE
+      WHEN pop.Pourcentage_remplissage_22_23 > pop.Pourcentage_remplissage_24_25 THEN pop.Pourcentage_remplissage_22_23
+       ELSE pop.Pourcentage_remplissage_24_25
+    END AS Pourcentage_remplissage
+  , age.avg_age
+  , iff.indice_formation 
+  , win_rate.avg_win_rate
+  , ppe.Position
+  , ppe.Points
+FROM ` project_id.dataset_id.KPI_financier_personae` AS fin
+LEFT JOIN project_id.dataset_id.KPI_popularite AS pop
+ON fin.Club = pop.Club
+LEFT JOIN project_id.dataset_id.SPORTIF_moyenne_age AS age
+ON fin.Club = age.Club_table_affluence
+LEFT JOIN project_id.dataset_id.SPORTIF_indice_formation_final AS iff
+ON fin.Club = iff.Club
+LEFT JOIN project_id.dataset_id.SPORTIF_win_rate_par_saison_finale_ne_pas_effacer_lautre AS win_rate
+ON fin.Club = win_rate.Club
+LEFT JOIN project_id.dataset_id.KPI_SPORTIF_participation_competition_europeenne AS ppe
+ON fin.Club = ppe.Club_table_affluence)
+
+SELECT
+*
+FROM tab1
+WHERE Valeur_Entreprise_Euros  <= 500000000
+  AND Valeur_Entreprise_Euros != 0  
+  AND Pourcentage_remplissage > 0.90 
+  AND avg_win_rate > 0.40
+ORDER BY Pourcentage_remplissage DESC
+LIMIT 5
+

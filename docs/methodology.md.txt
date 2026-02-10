@@ -1,0 +1,5 @@
+L’Outils DATA FC est destiné à aider les investisseurs à finaliser le choix de club à acquérir.
+Notre base de données s’est concentrée sur les clubs des 3 plus hauts championnats des 5 ligues majeures d’Europe (le Big 5 : Angleterre, France, Espagne, Italie et Allemagne)
+Nous nous sommes basés sur 3 domaines primordiaux dans le milieu du Football professionnel : le financier, le sportif et la popularité du club.
+Afin d’apporter un exemple à l’outil nous avons créer différents profils, Ryan, Nasser et Bob qui ont chacun des objectifs et des indicateurs propres à leur projet.
+L’outil permet à n’importe quel investisseur d’entrer ses propres conditions et d’obtenir un top 5 des clubs les plus pertinents à son projet et ses critères.

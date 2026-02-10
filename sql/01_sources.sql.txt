@@ -1,0 +1,69 @@
+-- ========================================
+-- DATA FC – import de tables à partir d’un dataset public
+-- Objectif : incorporer dans BigQuery toutes les tables du dataset
+-- ========================================
+Tables :
+- appearances
+- club_games
+- clubs
+- competitions
+- game_events
+- games
+- player_value
+- players
+- transfers
+
+-- ========================================
+-- DATA FC – import de tables à partir du scrapping de différents sites spécialisés publics
+-- Objectif : incorporer dans BigQuery toutes les tables et données issues du scrapping
+-- ========================================
+Tables :
+- Valeur entreprise raw
+- Instagram_followers_club_raw
+- Infos_propriete_stade_clubs
+- Evolution_valeur_marchande_23_24
+- Evolution_valeur_marchande_24_25
+- Evolution_valeur_marchande_25_26
+- Coefficient_clubs_UEFA_clean
+- Clubs_formateurs_top25_big5
+- Clubs_ev_Forbes_top22_raw
+- Clubs_ayant_remporte_le_plus_de_competitions_europeennes
+- Club_geoloc_country_ladders
+- Centre_de_formation_top_100_big5
+- Centre_de_formation_raw
+- Affluence clubs 22-23
+- Affluence clubs 24-25
+-- ========================================
+-- DATA FC – Nettoyage des données
+-- Objectif : renommer les colonnes de la table ‘Instagram_followers_club_raw’
+-- ========================================
+
+ SELECT 
+      string_field_0 AS Ligue,
+      string_field_1 AS Club,
+      string_field_2 AS Division,
+      string_field_3 AS Instagram,
+      string_field_4 AS Followers
+  FROM `project_id.dataset_id.Instagram_followers_club_raw` 
+
+-- ========================================
+-- DATA FC – Nettoyage des données
+-- Objectif : renommer ‘Angleterre’ par ‘Royaume-Uni’
+-- ========================================
+
+SELECT 
+      *,
+  	CASE 
+      WHEN Pays = "Angleterre" THEN "Royaume-Uni" 
+  		ELSE Pays 
+  	END AS pays_clean
+FROM `project_id.dataset_id.Club_geoloc_country_ladders`
+
+-- ========================================
+-- DATA FC – import de tables à partir d’un fichier Google Sheet qui nous a permis de rassembler pour chaque club les différentes dénominations que nous avons pu retrouver dans nos différentes tables sources
+-- Objectif : incorporer dans BigQuery des tables pour chaque domaine d’étude pour nous permettre de joindre les tables avec une primary key commune
+-- ========================================
+Tables :
+- KPI_sportif_V2
+- PK_KPI_financier
+- PK_KPI_popularite
