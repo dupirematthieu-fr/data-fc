@@ -66,13 +66,13 @@ Sources → Modélisation → Indicateurs → Tables décisionnelles
 
 ## 📊 Extraits du Dashboard (Looker Studio)
 
-<img width="1441" height="1076" alt="Capture d&#39;écran 2026-02-03 200641" src="https://github.com/user-attachments/assets/dd7d99f6-d535-4f0d-887a-92ad44122922" />
-<img width="1436" height="1077" alt="Capture d&#39;écran 2026-02-03 200658" src="https://github.com/user-attachments/assets/8eb3cce8-87ef-4218-a255-fb87eb3bcf88" />
-<img width="1435" height="1077" alt="Capture d&#39;écran 2026-02-03 200715" src="https://github.com/user-attachments/assets/2937554b-38a6-46b1-ba63-0d7665cc2510" />
-<img width="1435" height="1073" alt="Capture d&#39;écran 2026-02-03 200737" src="https://github.com/user-attachments/assets/ed6efd5a-1985-44a3-a9a2-04c68ae2fe48" />
-<img width="1438" height="1074" alt="Capture d&#39;écran 2026-02-03 200751" src="https://github.com/user-attachments/assets/6022bd8a-828d-41ed-a9f0-471ef4770613" />
-<img width="1439" height="1076" alt="Capture d&#39;écran 2026-02-03 200810" src="https://github.com/user-attachments/assets/258d771e-5fb0-4a87-9553-f3616117028a" />
-<img width="1439" height="1076" alt="Capture d&#39;écran 2026-02-03 200821" src="https://github.com/user-attachments/assets/c9b17145-4b52-4d2e-931e-90aa91d58374" />
+<img width="1441" height="1076" alt="Capture d&#39;écran 2026-02-03 200641" src="https://github.com/user-attachments/assets/5f65f3fd-d1f4-4d66-beac-ddadd794b47a" />
+<img width="1436" height="1077" alt="Capture d&#39;écran 2026-02-03 200658" src="https://github.com/user-attachments/assets/c13346b3-52b7-47c0-b642-4c3df3932f9a" />
+<img width="1435" height="1077" alt="Capture d&#39;écran 2026-02-03 200715" src="https://github.com/user-attachments/assets/f634a586-d332-4f7a-a528-12a231641352" />
+<img width="1435" height="1073" alt="Capture d&#39;écran 2026-02-03 200737" src="https://github.com/user-attachments/assets/23496543-b15c-4d85-adaf-bdb0f1f63d28" />
+<img width="1438" height="1074" alt="Capture d&#39;écran 2026-02-03 200751" src="https://github.com/user-attachments/assets/968332aa-aecd-4eb9-a6fa-caad6feefdb3" />
+<img width="1439" height="1076" alt="Capture d&#39;écran 2026-02-03 200810" src="https://github.com/user-attachments/assets/febfcc01-6ff8-4557-a9aa-8b4c2209b1f9" />
+<img width="1439" height="1076" alt="Capture d&#39;écran 2026-02-03 200821" src="https://github.com/user-attachments/assets/e463a498-0748-4ac1-820b-a59d4d2bc013" />
 
 ---
 
