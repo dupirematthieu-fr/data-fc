@@ -1,8 +1,9 @@
 -- ========================================
--- DATA FC – import de tables à partir d’un dataset public
+-- DATA FC â€“ import de tables Ã  partir dâ€™un dataset public
 -- Objectif : incorporer dans BigQuery toutes les tables du dataset
 -- ========================================
-Tables :
+
+TablesÂ :
 - appearances
 - club_games
 - clubs
@@ -13,11 +14,14 @@ Tables :
 - players
 - transfers
 
+
+
 -- ========================================
--- DATA FC – import de tables à partir du scrapping de différents sites spécialisés publics
--- Objectif : incorporer dans BigQuery toutes les tables et données issues du scrapping
+-- DATA FC â€“ import de tables Ã  partir du scrapping de diffÃ©rents sites spÃ©cialisÃ©s publics
+-- Objectif : incorporer dans BigQuery toutes les tables et donnÃ©es issues du scrapping
 -- ========================================
-Tables :
+
+TablesÂ :
 - Valeur entreprise raw
 - Instagram_followers_club_raw
 - Infos_propriete_stade_clubs
@@ -33,37 +37,45 @@ Tables :
 - Centre_de_formation_raw
 - Affluence clubs 22-23
 - Affluence clubs 24-25
+
+
+
 -- ========================================
--- DATA FC – Nettoyage des données
--- Objectif : renommer les colonnes de la table ‘Instagram_followers_club_raw’
+-- DATA FC â€“ Nettoyage des donnÃ©es
+-- Objectif : renommer les colonnes de la table â€˜Instagram_followers_club_rawâ€™
 -- ========================================
 
- SELECT 
+Â SELECT 
       string_field_0 AS Ligue,
       string_field_1 AS Club,
       string_field_2 AS Division,
       string_field_3 AS Instagram,
       string_field_4 AS Followers
-  FROM `project_id.dataset_id.Instagram_followers_club_raw` 
+Â  FROM `project_id.dataset_id.Instagram_followers_club_raw` 
+
+
 
 -- ========================================
--- DATA FC – Nettoyage des données
--- Objectif : renommer ‘Angleterre’ par ‘Royaume-Uni’
+-- DATA FC â€“ Nettoyage des donnÃ©es
+-- Objectif : renommer â€˜Angleterreâ€™ par â€˜Royaume-Uniâ€™
 -- ========================================
 
 SELECT 
       *,
-  	CASE 
+Â  	CASE 
       WHEN Pays = "Angleterre" THEN "Royaume-Uni" 
-  		ELSE Pays 
-  	END AS pays_clean
+Â  		ELSE Pays 
+Â  	END AS pays_clean
 FROM `project_id.dataset_id.Club_geoloc_country_ladders`
 
+
+
 -- ========================================
--- DATA FC – import de tables à partir d’un fichier Google Sheet qui nous a permis de rassembler pour chaque club les différentes dénominations que nous avons pu retrouver dans nos différentes tables sources
--- Objectif : incorporer dans BigQuery des tables pour chaque domaine d’étude pour nous permettre de joindre les tables avec une primary key commune
+-- DATA FC â€“ import de tables Ã  partir dâ€™un fichier Google Sheet qui nous a permis de rassembler pour chaque club les diffÃ©rentes dÃ©nominations que nous avons pu retrouver dans nos diffÃ©rentes tables sources
+-- Objectif : incorporer dans BigQuery des tables pour chaque domaine dâ€™Ã©tude pour nous permettre de joindre les tables avec une primary key commune
 -- ========================================
-Tables :
+
+TablesÂ :
 - KPI_sportif_V2
 - PK_KPI_financier
 - PK_KPI_popularite
