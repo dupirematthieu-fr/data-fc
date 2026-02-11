@@ -1,184 +1,198 @@
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_valeur entreprise
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_valeur entreprise
 -- ========================================
+
 SELECT DISTINCT
-# Création d'une nouvelle colonne Ligue_new répertoriant les bons championnats selon la division
-  CASE
-      WHEN Ligue = "Premier League" AND Division = 1 THEN "Premier League"
-      WHEN Ligue = "Premier League" AND Division = 2 THEN "Championship"
-      WHEN Ligue = "Premier League" AND Division = 3 THEN "League One"
-      WHEN Ligue = "Bundesliga" AND Division = 1 THEN "Bundesliga"
-      WHEN Ligue = "Bundesliga" AND Division = 2 THEN "2.Bundesliga"
-      WHEN Ligue = "Bundesliga" AND Division = 3 THEN "3.Liga"
-      WHEN Ligue = "Ligue 1" AND Division = 1 THEN "Ligue 1"
-      WHEN Ligue = "Ligue 1" AND Division = 2 THEN "Ligue 2"
-      WHEN Ligue = "Ligue 1" AND Division = 3 THEN "National"
-      WHEN Ligue = "Serie A" AND Division = 1 THEN "Serie A"
-      WHEN Ligue = "Serie A" AND Division = 2 THEN "Serie B"
-      WHEN Ligue = "Serie A" AND Division = 3 THEN "Serie C"
-      WHEN Ligue = "La Liga" AND Division = 1 THEN "LaLiga"
-      WHEN Ligue = "La Liga" AND Division = 2 THEN "LaLiga 2"
-      WHEN Ligue = "La Liga" AND Division = 3 THEN "Primera federacion"
-    END AS Ligue
-    , Division
-    , Club
-  # Transformation de la colonne STRING en FLOAT
-    , CAST(REPLACE(Valeur_Entreprise_Euros," ","") AS FLOAT64) AS Valeur_Entreprise_Euros
+# CrÃ©ation d'une nouvelle colonne Ligue_new rÃ©pertoriant les bons championnats selon la division
+Â  CASE
+Â  Â  Â  WHEN Ligue = "Premier League" AND Division = 1 THEN "Premier League"
+Â  Â  Â  WHEN Ligue = "Premier League" AND Division = 2 THEN "Championship"
+Â  Â  Â  WHEN Ligue = "Premier League" AND Division = 3 THEN "League One"
+Â  Â  Â  WHEN Ligue = "Bundesliga" AND Division = 1 THEN "Bundesliga"
+Â  Â  Â  WHEN Ligue = "Bundesliga" AND Division = 2 THEN "2.Bundesliga"
+Â  Â  Â  WHEN Ligue = "Bundesliga" AND Division = 3 THEN "3.Liga"
+Â  Â  Â  WHEN Ligue = "Ligue 1" AND Division = 1 THEN "Ligue 1"
+Â  Â  Â  WHEN Ligue = "Ligue 1" AND Division = 2 THEN "Ligue 2"
+Â  Â  Â  WHEN Ligue = "Ligue 1" AND Division = 3 THEN "National"
+Â  Â  Â  WHEN Ligue = "Serie A" AND Division = 1 THEN "Serie A"
+Â  Â  Â  WHEN Ligue = "Serie A" AND Division = 2 THEN "Serie B"
+Â  Â  Â  WHEN Ligue = "Serie A" AND Division = 3 THEN "Serie C"
+Â  Â  Â  WHEN Ligue = "La Liga" AND Division = 1 THEN "LaLiga"
+Â  Â  Â  WHEN Ligue = "La Liga" AND Division = 2 THEN "LaLiga 2"
+Â  Â  Â  WHEN Ligue = "La Liga" AND Division = 3 THEN "Primera federacion"
+Â  Â  END AS Ligue
+Â  Â  , Division
+Â  Â  , Club
+Â  # Transformation de la colonne STRING en FLOAT
+Â  Â  , CAST(REPLACE(Valeur_Entreprise_Euros," ","") AS FLOAT64) AS Valeur_Entreprise_Euros
 FROM `project_id.dataset_id.Valeur entreprise raw` 
+
+
+
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_transfert_vente_all_season
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_transfert_vente_all_season
 -- ========================================
+
 WITH tab1 AS (
 SELECT 
-  name
-  , from_club_name AS Club_vendeur
-  , transfer_season
-# Agrégation par club pour avoir le montant total de transfert
-  , SUM(transfer_fee) AS total_transfert_vente
-  , COUNT(*) AS number_of_transfert
+Â  name
+Â  , from_club_name AS Club_vendeur
+Â  , transfer_season
+# AgrÃ©gation par club pour avoir le montant total de transfert
+Â  , SUM(transfer_fee) AS total_transfert_vente
+Â  , COUNT(*) AS number_of_transfert
 FROM project_id.dataset_id.transfert_vente
 GROUP BY name, Club_vendeur, transfer_season
 )
 
 SELECT
-  tab2.Club_table_affluence AS Club
-  , tab1.Club_vendeur
-  , tab1.transfer_season
-  , tab1.total_transfert_vente
-  , tab1.number_of_transfert
+Â  tab2.Club_table_affluence AS Club
+Â  , tab1.Club_vendeur
+Â  , tab1.transfer_season
+Â  , tab1.total_transfert_vente
+Â  , tab1.number_of_transfert
 FROM tab1
 LEFT JOIN ` project_id.dataset_id.PK_KPI_financier` AS tab2
 ON tab1.name = tab2.Club_table_clubs
 WHERE tab2.Club_table_affluence IS NOT NULL
 ORDER BY Club
-  , Club_vendeur
-  , transfer_season
+Â  , Club_vendeur
+Â  , transfer_season
+
+
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_transfert_vente
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_transfert_vente
 -- ========================================
+
 WITH s1 AS (
-  SELECT 
-    name
-    , transfer_season
-  # Agrégation par club pour avoir le montant total de transfert
-    , SUM(transfer_fee) AS total_fee_per_club
-  FROM project_id.dataset_id.transfert_vente
-  # Filtre sur les 3 dernières saisons
-  WHERE transfer_season IN ("22/23","23/24","24/25")
-  GROUP BY  name
-  , transfer_season
-  ORDER BY name,transfer_season
+Â  SELECT 
+Â  Â  name
+Â  Â  , transfer_season
+Â  # AgrÃ©gation par club pour avoir le montant total de transfert
+Â  Â  , SUM(transfer_fee) AS total_fee_per_club
+Â  FROM project_id.dataset_id.transfert_vente
+Â  # Filtre sur les 3 derniÃ¨res saisons
+Â  WHERE transfer_season IN ("22/23","23/24","24/25")
+Â  GROUP BY Â name
+Â  , transfer_season
+Â  ORDER BY name,transfer_season
 ),
 
 s2 AS (
-  SELECT 
-    name AS club
-  # Remplacment de "/" par "_" pour faire le pivot
-    , REPLACE(transfer_season, "/","_") AS season
-    , total_fee_per_club
-  FROM s1
+Â  SELECT 
+Â  Â  name AS club
+Â  # Remplacment de "/" par "_" pour faire le pivot
+Â  Â  , REPLACE(transfer_season, "/","_") AS season
+Â  Â  , total_fee_per_club
+Â  FROM s1
 )
 
 SELECT 
-  *
+Â  *
 FROM s2
-# Fonction pivot pour création de colonnes selon les saisons
+# Fonction pivot pour crÃ©ation de colonnes selon les saisons
 PIVOT(SUM(total_fee_per_club) FOR season IN ("22_23","23_24","24_25"))
 
+
+
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_transfert_achat_all_season
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_transfert_achat_all_season
 -- ========================================
+
 WITH tab1 AS (
 SELECT 
-  name
-  , to_club_name AS Club_acheteur
-  , transfer_season
-# Agrégation par club pour avoir le montant total de transfert
-  , SUM(transfer_fee) AS total_transfert_achat
-  , COUNT(*) AS number_of_transfert
+Â  name
+Â  , to_club_name AS Club_acheteur
+Â  , transfer_season
+# AgrÃ©gation par club pour avoir le montant total de transfert
+Â  , SUM(transfer_fee) AS total_transfert_achat
+Â  , COUNT(*) AS number_of_transfert
 FROM project_id.dataset_id.transfert_achat
 GROUP BY name, Club_acheteur, transfer_season
 )
 
 SELECT
-  tab2.Club_table_affluence AS Club
-  , tab1.Club_acheteur
-  , tab1.transfer_season
-  , tab1.total_transfert_achat
-  , tab1.number_of_transfert
+Â  tab2.Club_table_affluence AS Club
+Â  , tab1.Club_acheteur
+Â  , tab1.transfer_season
+Â  , tab1.total_transfert_achat
+Â  , tab1.number_of_transfert
 FROM tab1
 LEFT JOIN ` project_id.dataset_id.PK_KPI_financier` AS tab2
 ON tab1.name = tab2.Club_table_clubs
 WHERE tab2.Club_table_affluence IS NOT NULL
 ORDER BY Club
-  , Club_acheteur
-  , transfer_season
+Â  , Club_acheteur
+Â  , transfer_season
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_transfert_achat
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_transfert_achat
 -- ========================================
+
 WITH s1 AS (
-  SELECT 
-    name
-    , transfer_season
-  # Agrégation par club pour avoir le montant total de transfert
-    , SUM(transfer_fee) AS total_fee_per_club
-  FROM project_id.dataset_id.transfert_achat
-  # Filtre sur les 3 dernières saisons
-  WHERE transfer_season IN ("22/23","23/24","24/25")
-  GROUP BY  name
-  , transfer_season
-  ORDER BY name,transfer_season
+Â  SELECT 
+Â  Â  name
+Â  Â  , transfer_season
+Â  # AgrÃ©gation par club pour avoir le montant total de transfert
+Â  Â  , SUM(transfer_fee) AS total_fee_per_club
+Â  FROM project_id.dataset_id.transfert_achat
+Â  # Filtre sur les 3 derniÃ¨res saisons
+Â  WHERE transfer_season IN ("22/23","23/24","24/25")
+Â  GROUP BY Â name
+Â  , transfer_season
+Â  ORDER BY name,transfer_season
 ),
 
 s2 AS (
-  SELECT 
-    name AS club
-  # Remplacment de "/" par "_" pour faire le pivot
-    , REPLACE(transfer_season, "/","_") AS season
-    , total_fee_per_club
-  FROM s1
+Â  SELECT 
+Â  Â  name AS club
+Â  # Remplacment de "/" par "_" pour faire le pivot
+Â  Â  , REPLACE(transfer_season, "/","_") AS season
+Â  Â  , total_fee_per_club
+Â  FROM s1
 )
 
 SELECT 
-  *
+Â  *
 FROM s2
-# Fonction pivot pour création de colonnes selon les saisons
+# Fonction pivot pour crÃ©ation de colonnes selon les saisons
 PIVOT(SUM(total_fee_per_club) FOR season IN ("22_23","23_24","24_25"))
 
 
+
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_top3_player
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_top3_player
 -- ========================================
+
 WITH s1 AS (
-  SELECT  
-    current_club_name
-    , name
-    , last_season
-    , market_value_in_eur
-    , ROW_NUMBER()OVER(
-        PARTITION BY current_club_name
-        ORDER BY market_value_in_eur DESC) AS rn
-  FROM ` project_id.dataset_id.players` 
-  WHERE (last_season = 2024)
-    AND current_club_domestic_competition_id IN("L1","FR1","ES1","IT1","GB1")
+Â  SELECT Â 
+Â  Â  current_club_name
+Â  Â  , name
+Â  Â  , last_season
+Â  Â  , market_value_in_eur
+Â  Â  , ROW_NUMBER()OVER(
+Â  Â  Â  Â  PARTITION BY current_club_name
+Â  Â  Â  Â  ORDER BY market_value_in_eur DESC) AS rn
+Â  FROM ` project_id.dataset_id.players` 
+Â  WHERE (last_season = 2024)
+Â  Â  AND current_club_domestic_competition_id IN("L1","FR1","ES1","IT1","GB1")
 )
 
 SELECT
-  s2.Club_table_affluence AS Club
-  , s1.current_club_name
-  , s1.name
-  , s1.last_season
-  , s1.market_value_in_eur
-  , s1.rn
+Â  s2.Club_table_affluence AS Club
+Â  , s1.current_club_name
+Â  , s1.name
+Â  , s1.last_season
+Â  , s1.market_value_in_eur
+Â  , s1.rn
 FROM s1
 # Jointure pour ramener la PK
 LEFT JOIN project_id.dataset_id.PK_KPI_financier AS s2
@@ -187,147 +201,154 @@ WHERE rn <=3
 ORDER BY current_club_name, rn
 
 
+
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_net_transfer_record
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_net_transfer_record
 -- ========================================
+
 # Transformation de la colonne net_transfer_record de STRING en FLOAT
 
 WITH s1 AS (
-  SELECT
-    club_id
-    , name
-    , domestic_competition_id
-    , net_transfer_record
-  # Suppression de la devise € et +- pour les lignes nulles
-    , CASE
-        WHEN REGEXP_CONTAINS(net_transfer_record, r'\+€') THEN REPLACE(net_transfer_record, "+€", "+")
-        WHEN REGEXP_CONTAINS(net_transfer_record, r'\+-') THEN REPLACE(net_transfer_record, "+-", "")
-        WHEN REGEXP_CONTAINS(net_transfer_record, r"€-") THEN REPLACE(net_transfer_record, "€-", "-")
-        END AS net_transfer_record_sans_devise
-    , last_season
-  FROM ` project_id.dataset_id.clubs`
+Â  SELECT
+Â  Â  club_id
+Â  Â  , name
+Â  Â  , domestic_competition_id
+Â  Â  , net_transfer_record
+Â  # Suppression de la devise â‚¬ et +- pour les lignes nulles
+Â  Â  , CASE
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record, r'\+â‚¬') THEN REPLACE(net_transfer_record, "+â‚¬", "+")
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record, r'\+-') THEN REPLACE(net_transfer_record, "+-", "")
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record, r"â‚¬-") THEN REPLACE(net_transfer_record, "â‚¬-", "-")
+Â  Â  Â  Â  END AS net_transfer_record_sans_devise
+Â  Â  , last_season
+Â  FROM ` project_id.dataset_id.clubs`
 ),
 
 s2 AS (
-  SELECT
-    club_id
-    , name
-    , domestic_competition_id
-    , net_transfer_record
-    , net_transfer_record_sans_devise
-  # Création d'une colonne is_positif pour savoir si montant est positif ou négatif
-    , CASE
-        WHEN REGEXP_CONTAINS(net_transfer_record_sans_devise, r'\+') THEN 1
-        WHEN REGEXP_CONTAINS(net_transfer_record_sans_devise, '-') THEN 0
-        ELSE 1
-        END AS is_positif
-  # Suppression des signes + et -
-    , CASE
-        WHEN REGEXP_CONTAINS(net_transfer_record_sans_devise, r'\+') THEN REPLACE(net_transfer_record_sans_devise, "+", "")
-        WHEN REGEXP_CONTAINS(net_transfer_record_sans_devise, '-') THEN REPLACE(net_transfer_record_sans_devise, "-", "")
-        ELSE net_transfer_record_sans_devise
-        END AS net_transfer_record_string
-    , last_season
-  FROM s1
+Â  SELECT
+Â  Â  club_id
+Â  Â  , name
+Â  Â  , domestic_competition_id
+Â  Â  , net_transfer_record
+Â  Â  , net_transfer_record_sans_devise
+Â  # CrÃ©ation d'une colonne is_positif pour savoir si montant est positif ou nÃ©gatif
+Â  Â  , CASE
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record_sans_devise, r'\+') THEN 1
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record_sans_devise, '-') THEN 0
+Â  Â  Â  Â  ELSE 1
+Â  Â  Â  Â  END AS is_positif
+Â  # Suppression des signes + et -
+Â  Â  , CASE
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record_sans_devise, r'\+') THEN REPLACE(net_transfer_record_sans_devise, "+", "")
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record_sans_devise, '-') THEN REPLACE(net_transfer_record_sans_devise, "-", "")
+Â  Â  Â  Â  ELSE net_transfer_record_sans_devise
+Â  Â  Â  Â  END AS net_transfer_record_string
+Â  Â  , last_season
+Â  FROM s1
 ),
 
 s3 AS (
-  SELECT 
-    club_id
-    , name
-    , domestic_competition_id
-    , net_transfer_record
-    , net_transfer_record_sans_devise
-    , is_positif
-    , net_transfer_record_string
-  # Suppression des abbréviations bn, k et m et remplacement par des 0
-    , CASE
-        WHEN REGEXP_CONTAINS(net_transfer_record_string, 'k') THEN REPLACE(net_transfer_record_string, "k", "000")
-        WHEN REGEXP_CONTAINS(net_transfer_record_string, 'm') THEN REPLACE(net_transfer_record_string, "m", "0000")
-        ELSE net_transfer_record_string
-        END AS net_transfer_record_string_value
-    , last_season
-  FROM s2
+Â  SELECT 
+Â  Â  club_id
+Â  Â  , name
+Â  Â  , domestic_competition_id
+Â  Â  , net_transfer_record
+Â  Â  , net_transfer_record_sans_devise
+Â  Â  , is_positif
+Â  Â  , net_transfer_record_string
+Â  # Suppression des abbrÃ©viations bn, k et m et remplacement par des 0
+Â  Â  , CASE
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record_string, 'k') THEN REPLACE(net_transfer_record_string, "k", "000")
+Â  Â  Â  Â  WHEN REGEXP_CONTAINS(net_transfer_record_string, 'm') THEN REPLACE(net_transfer_record_string, "m", "0000")
+Â  Â  Â  Â  ELSE net_transfer_record_string
+Â  Â  Â  Â  END AS net_transfer_record_string_value
+Â  Â  , last_season
+Â  FROM s2
 )
 
 SELECT
-  name
-  , net_transfer_record
-  , is_positif
+Â  name
+Â  , net_transfer_record
+Â  , is_positif
 # Suppression des . et transformation colonne en FLOAT
-  , CAST(REPLACE(net_transfer_record_string_value,'.','') AS FLOAT64) AS net_transfer_record_VF
-  , last_season
+Â  , CAST(REPLACE(net_transfer_record_string_value,'.','') AS FLOAT64) AS net_transfer_record_VF
+Â  , last_season
 FROM s3
 # Filtre sur les championnats du big5 et les saisons 2023 et 2024
 WHERE (last_season = 2023
-  OR last_season = 2024)
-  AND  (domestic_competition_id = "FR1"
-   OR domestic_competition_id = "IT1"
-   OR domestic_competition_id = "ES1"
-   OR domestic_competition_id = "GB1"
-   OR domestic_competition_id = "L1");
+Â  OR last_season = 2024)
+Â  AND Â (domestic_competition_id = "FR1"
+Â  Â OR domestic_competition_id = "IT1"
+Â  Â OR domestic_competition_id = "ES1"
+Â  Â OR domestic_competition_id = "GB1"
+Â  Â OR domestic_competition_id = "L1");
+
+
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_Market_value_per_player
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_Market_value_per_player
 -- ========================================
+
 WITH tab1 AS (
-  SELECT  
-      current_club_name,
-      last_season,
-# Agrégation par club pour avoir la valeur moyenne et max de market_value par joueur 
-      ROUND(AVG(market_value_in_eur), 2) AS avg_market_value,
-      MAX(highest_market_value_in_eur) AS highest_market_value
-  FROM ` project_id.dataset_id.players`
-# Filtre sur les deux dernières saisons
-  WHERE last_season IN (2023, 2024)
-  GROUP BY current_club_name, last_season
+Â  SELECT Â 
+Â  Â  Â  current_club_name,
+Â  Â  Â  last_season,
+# AgrÃ©gation par club pour avoir la valeur moyenne et max de market_value par joueur 
+Â  Â  Â  ROUND(AVG(market_value_in_eur), 2) AS avg_market_value,
+Â  Â  Â  MAX(highest_market_value_in_eur) AS highest_market_value
+Â  FROM ` project_id.dataset_id.players`
+# Filtre sur les deux derniÃ¨res saisons
+Â  WHERE last_season IN (2023, 2024)
+Â  GROUP BY current_club_name, last_season
 ),
 
 tab2 AS (
-  SELECT
-    *
-  FROM tab1
-# Première fonction pivot pour affichage de la première agrégation en colonne
-  PIVOT(
-    AVG(avg_market_value) FOR last_season IN (2023, 2024)
-  )
+Â  SELECT
+Â  Â  *
+Â  FROM tab1
+# PremiÃ¨re fonction pivot pour affichage de la premiÃ¨re agrÃ©gation en colonne
+Â  PIVOT(
+Â  Â  AVG(avg_market_value) FOR last_season IN (2023, 2024)
+Â  )
 ),
 
 tab3 AS (
-  SELECT *
-  FROM tab1
-# Deuxième fonction pivot pour affichage de la deuxième agrégation en colonne
-  PIVOT(
-    MAX(highest_market_value) FOR last_season IN (2023, 2024)
-  )
+Â  SELECT *
+Â  FROM tab1
+# DeuxiÃ¨me fonction pivot pour affichage de la deuxiÃ¨me agrÃ©gation en colonne
+Â  PIVOT(
+Â  Â  MAX(highest_market_value) FOR last_season IN (2023, 2024)
+Â  )
 )
 
 # Fusion des deux pivots
 SELECT 
-  tab3.current_club_name AS club,
-  AVG(tab2._2023) AS avg_market_value_2023,
-  AVG(tab2._2024) AS avg_market_value_2024,
-  MAX(tab3._2023) AS highest_market_value_2023,
-  MAX(tab3._2024) AS highest_market_value_2024
+Â  tab3.current_club_name AS club,
+Â  AVG(tab2._2023) AS avg_market_value_2023,
+Â  AVG(tab2._2024) AS avg_market_value_2024,
+Â  MAX(tab3._2023) AS highest_market_value_2023,
+Â  MAX(tab3._2024) AS highest_market_value_2024
 FROM tab2
 INNER JOIN tab3
-    USING (current_club_name)
+Â  Â  USING (current_club_name)
 GROUP BY club
 ORDER BY club;
 
 
+
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_Market_value_3_years
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_Market_value_3_years
 -- ========================================
-SELECT  
-  tab2.Club_table_affluence
-  , tab1.Club
-  , tab1.Season
-  , tab1.Average_market_value
-  , tab1.Total_market_value
+
+SELECT Â 
+Â  tab2.Club_table_affluence
+Â  , tab1.Club
+Â  , tab1.Season
+Â  , tab1.Average_market_value
+Â  , tab1.Total_market_value
 FROM ` project_id.dataset_id.KPI_financier_Market_value_23_24` AS tab1
 LEFT JOIN project_id.dataset_id.PK_KPI_financier AS tab2
 ON tab1.Club = tab2.Club_table_valeur_marchande_23_24
@@ -335,12 +356,12 @@ WHERE Pays IN ("England","France","Germany","Italy","Spain")
 
 UNION ALL
 
-SELECT  
-  tab2.Club_table_affluence
-  , tab3.Club
-  , tab3.Season
-  , tab3.Average_market_value
-  , tab3.Total_market_value
+SELECT Â 
+Â  tab2.Club_table_affluence
+Â  , tab3.Club
+Â  , tab3.Season
+Â  , tab3.Average_market_value
+Â  , tab3.Total_market_value
 FROM ` project_id.dataset_id.KPI_financier_Market_value_24_25` AS tab3
 LEFT JOIN project_id.dataset_id.PK_KPI_financier AS tab2
 ON tab3.Club = tab2.Club_table_valeur_marchande_24_25
@@ -348,12 +369,12 @@ WHERE Pays IN ("England","France","Germany","Italy","Spain")
 
 UNION ALL
 
-SELECT  
-  tab2.Club_table_affluence
-  , tab4.Club
-  , tab4.Season
-  , tab4.Average_market_value
-  , tab4.Total_market_value
+SELECT Â 
+Â  tab2.Club_table_affluence
+Â  , tab4.Club
+Â  , tab4.Season
+Â  , tab4.Average_market_value
+Â  , tab4.Total_market_value
 FROM ` project_id.dataset_id.KPI_financier_Market_value_25_26` AS tab4
 LEFT JOIN project_id.dataset_id.PK_KPI_financier AS tab2
 ON tab4.Club = tab2.Club_table_valeur_marchande_25_26
@@ -362,183 +383,189 @@ WHERE Pays IN ("England","France","Germany","Italy","Spain")
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_Market_value_25_26
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_Market_value_25_26
 -- ========================================
-# Sélection des colonnes liées au financier
+
+# SÃ©lection des colonnes liÃ©es au financier
 
 WITH s1 AS (SELECT 
-  Pays
-  , Division AS Ligue
-  , Level AS Division
-  , Club
+Â  Pays
+Â  , Division AS Ligue
+Â  , Level AS Division
+Â  , Club
 # Suppression des devises
-  , REPLACE(___market_value_2025_2026, "€", "") AS Average_market_value_2025_2026
-  , REPLACE(Total_market_value_2025_2026, "€", "") AS Total_market_value_2025_2026
+Â  , REPLACE(___market_value_2025_2026, "â‚¬", "") AS Average_market_value_2025_2026
+Â  , REPLACE(Total_market_value_2025_2026, "â‚¬", "") AS Total_market_value_2025_2026
 FROM ` project_id.dataset_id.Evolution_valeur_marchande_25_26`
 ),
 
 s2 AS (SELECT
-  s1.Pays
-  , s1.Ligue
-  , s1.Division
-  , s1.Club
-# Suppression des abbréviations bn, k et m et remplacement par des 0
-  , CASE
-      WHEN REGEXP_CONTAINS(Average_market_value_2025_2026, 'k') THEN REPLACE(Average_market_value_2025_2026, "k", "000")
-      WHEN REGEXP_CONTAINS(Average_market_value_2025_2026, 'm') THEN REPLACE(Average_market_value_2025_2026, "m", "0000")
-      ELSE Average_market_value_2025_2026
-    END AS Average_market_value_2025_2026
-  , CASE
-      WHEN REGEXP_CONTAINS(Total_market_value_2025_2026, 'k') THEN REPLACE(Total_market_value_2025_2026, "k", "000")
-      WHEN REGEXP_CONTAINS(Total_market_value_2025_2026, 'm') THEN REPLACE(Total_market_value_2025_2026, "m", "0000")
-      WHEN REGEXP_CONTAINS(Total_market_value_2025_2026, 'bn') THEN REPLACE(Total_market_value_2025_2026, "bn", "0000000")
-      ELSE Total_market_value_2025_2026
-    END AS Total_market_value_2025_2026
+Â  s1.Pays
+Â  , s1.Ligue
+Â  , s1.Division
+Â  , s1.Club
+# Suppression des abbrÃ©viations bn, k et m et remplacement par des 0
+Â  , CASE
+Â  Â  Â  WHEN REGEXP_CONTAINS(Average_market_value_2025_2026, 'k') THEN REPLACE(Average_market_value_2025_2026, "k", "000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Average_market_value_2025_2026, 'm') THEN REPLACE(Average_market_value_2025_2026, "m", "0000")
+Â  Â  Â  ELSE Average_market_value_2025_2026
+Â  Â  END AS Average_market_value_2025_2026
+Â  , CASE
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2025_2026, 'k') THEN REPLACE(Total_market_value_2025_2026, "k", "000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2025_2026, 'm') THEN REPLACE(Total_market_value_2025_2026, "m", "0000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2025_2026, 'bn') THEN REPLACE(Total_market_value_2025_2026, "bn", "0000000")
+Â  Â  Â  ELSE Total_market_value_2025_2026
+Â  Â  END AS Total_market_value_2025_2026
 FROM s1
 )
 
 SELECT
-  s2.Pays
-  , s2.Ligue
-  , s2.Division
-  , s2.Club
-  , "25/26" AS Season
+Â  s2.Pays
+Â  , s2.Ligue
+Â  , s2.Division
+Â  , s2.Club
+Â  , "25/26" AS Season
 # Suppression des . et transformation colonne en FLOAT
-  , CAST(REPLACE(Average_market_value_2025_2026,".","") AS FLOAT64) AS Average_market_value
-  , CAST(REPLACE(Total_market_value_2025_2026,".","") AS FLOAT64) AS Total_market_value
+Â  , CAST(REPLACE(Average_market_value_2025_2026,".","") AS FLOAT64) AS Average_market_value
+Â  , CAST(REPLACE(Total_market_value_2025_2026,".","") AS FLOAT64) AS Total_market_value
 FROM s2
 
 
+
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_Market_value_24_25
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_Market_value_24_25
 -- ========================================
-# Sélection des colonnes liées au financier
+
+# SÃ©lection des colonnes liÃ©es au financier
 
 WITH s1 AS (SELECT 
-  Pays
-  , Division AS Ligue
-  , Level AS Division
-  , Club
+Â  Pays
+Â  , Division AS Ligue
+Â  , Level AS Division
+Â  , Club
 # Suppression des devises
-  , REPLACE(___market_value_2024_2025, "€", "") AS Average_market_value_2024_2025
-  , REPLACE(Total_market_value_2024_2025, "€", "") AS Total_market_value_2024_2025
+Â  , REPLACE(___market_value_2024_2025, "â‚¬", "") AS Average_market_value_2024_2025
+Â  , REPLACE(Total_market_value_2024_2025, "â‚¬", "") AS Total_market_value_2024_2025
 FROM ` project_id.dataset_id.Evolution_valeur_marchande_24_25`
 ),
 
 s2 AS (SELECT
-  s1.Pays
-  , s1.Ligue
-  , s1.Division
-  , s1.Club
-# Suppression des abbréviations bn, k et m et remplacement par des 0
-  , CASE
-      WHEN REGEXP_CONTAINS(Average_market_value_2024_2025, 'k') THEN REPLACE(Average_market_value_2024_2025, "k", "000")
-      WHEN REGEXP_CONTAINS(Average_market_value_2024_2025, 'm') THEN REPLACE(Average_market_value_2024_2025, "m", "0000")
-      ELSE Average_market_value_2024_2025
-    END AS Average_market_value_2024_2025
-  , CASE
-      WHEN REGEXP_CONTAINS(Total_market_value_2024_2025, 'k') THEN REPLACE(Total_market_value_2024_2025, "k", "000")
-      WHEN REGEXP_CONTAINS(Total_market_value_2024_2025, 'm') THEN REPLACE(Total_market_value_2024_2025, "m", "0000")
-      WHEN REGEXP_CONTAINS(Total_market_value_2024_2025, 'bn') THEN REPLACE(Total_market_value_2024_2025, "bn", "0000000")
-      ELSE Total_market_value_2024_2025
-    END AS Total_market_value_2024_2025
+Â  s1.Pays
+Â  , s1.Ligue
+Â  , s1.Division
+Â  , s1.Club
+# Suppression des abbrÃ©viations bn, k et m et remplacement par des 0
+Â  , CASE
+Â  Â  Â  WHEN REGEXP_CONTAINS(Average_market_value_2024_2025, 'k') THEN REPLACE(Average_market_value_2024_2025, "k", "000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Average_market_value_2024_2025, 'm') THEN REPLACE(Average_market_value_2024_2025, "m", "0000")
+Â  Â  Â  ELSE Average_market_value_2024_2025
+Â  Â  END AS Average_market_value_2024_2025
+Â  , CASE
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2024_2025, 'k') THEN REPLACE(Total_market_value_2024_2025, "k", "000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2024_2025, 'm') THEN REPLACE(Total_market_value_2024_2025, "m", "0000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2024_2025, 'bn') THEN REPLACE(Total_market_value_2024_2025, "bn", "0000000")
+Â  Â  Â  ELSE Total_market_value_2024_2025
+Â  Â  END AS Total_market_value_2024_2025
 FROM s1
 )
 
 SELECT
-  s2.Pays
-  , s2.Ligue
-  , s2.Division
-  , s2.Club
-  , "24/25" AS Season
+Â  s2.Pays
+Â  , s2.Ligue
+Â  , s2.Division
+Â  , s2.Club
+Â  , "24/25" AS Season
 # Suppression des . et transformation colonne en FLOAT
-  , CAST(REPLACE(Average_market_value_2024_2025,".","") AS FLOAT64) AS Average_market_value
-  , CAST(REPLACE(Total_market_value_2024_2025,".","") AS FLOAT64) AS Total_market_value
+Â  , CAST(REPLACE(Average_market_value_2024_2025,".","") AS FLOAT64) AS Average_market_value
+Â  , CAST(REPLACE(Total_market_value_2024_2025,".","") AS FLOAT64) AS Total_market_value
 FROM s2
 
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_Market_value_23_24
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_Market_value_23_24
 -- ========================================
-# Sélection des colonnes liées au financier
+
+# SÃ©lection des colonnes liÃ©es au financier
 
 WITH s1 AS (SELECT 
-  Pays
-  , Division AS Ligue
-  , Level AS Division
-  , Club
+Â  Pays
+Â  , Division AS Ligue
+Â  , Level AS Division
+Â  , Club
 # Suppression des devises
-  , REPLACE(___market_value_2023_2024, "€", "") AS Average_market_value_2023_2024
-  , REPLACE(Total_market_value_2023_2024, "€", "") AS Total_market_value_2023_2024
+Â  , REPLACE(___market_value_2023_2024, "â‚¬", "") AS Average_market_value_2023_2024
+Â  , REPLACE(Total_market_value_2023_2024, "â‚¬", "") AS Total_market_value_2023_2024
 FROM ` project_id.dataset_id.Evolution_valeur_marchande_23_24`
 ),
 
 s2 AS (SELECT
-  s1.Pays
-  , s1.Ligue
-  , s1.Division
-  , s1.Club
-# Suppression des abbréviations bn, k et m et remplacement par des 0
-  , CASE
-      WHEN REGEXP_CONTAINS(Average_market_value_2023_2024, 'k') THEN REPLACE(Average_market_value_2023_2024, "k", "000")
-      WHEN REGEXP_CONTAINS(Average_market_value_2023_2024, 'm') THEN REPLACE(Average_market_value_2023_2024, "m", "0000")
-      ELSE Average_market_value_2023_2024
-    END AS Average_market_value_2023_2024
-  , CASE
-      WHEN REGEXP_CONTAINS(Total_market_value_2023_2024, 'k') THEN REPLACE(Total_market_value_2023_2024, "k", "000")
-      WHEN REGEXP_CONTAINS(Total_market_value_2023_2024, 'm') THEN REPLACE(Total_market_value_2023_2024, "m", "0000")
-      WHEN REGEXP_CONTAINS(Total_market_value_2023_2024, 'bn') THEN REPLACE(Total_market_value_2023_2024, "bn", "0000000")
-      ELSE Total_market_value_2023_2024
-    END AS Total_market_value_2023_2024
+Â  s1.Pays
+Â  , s1.Ligue
+Â  , s1.Division
+Â  , s1.Club
+# Suppression des abbrÃ©viations bn, k et m et remplacement par des 0
+Â  , CASE
+Â  Â  Â  WHEN REGEXP_CONTAINS(Average_market_value_2023_2024, 'k') THEN REPLACE(Average_market_value_2023_2024, "k", "000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Average_market_value_2023_2024, 'm') THEN REPLACE(Average_market_value_2023_2024, "m", "0000")
+Â  Â  Â  ELSE Average_market_value_2023_2024
+Â  Â  END AS Average_market_value_2023_2024
+Â  , CASE
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2023_2024, 'k') THEN REPLACE(Total_market_value_2023_2024, "k", "000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2023_2024, 'm') THEN REPLACE(Total_market_value_2023_2024, "m", "0000")
+Â  Â  Â  WHEN REGEXP_CONTAINS(Total_market_value_2023_2024, 'bn') THEN REPLACE(Total_market_value_2023_2024, "bn", "0000000")
+Â  Â  Â  ELSE Total_market_value_2023_2024
+Â  Â  END AS Total_market_value_2023_2024
 FROM s1
 )
 
 SELECT
-  s2.Pays
-  , s2.Ligue
-  , s2.Division
-  , s2.Club
-  , "23/24" AS Season
+Â  s2.Pays
+Â  , s2.Ligue
+Â  , s2.Division
+Â  , s2.Club
+Â  , "23/24" AS Season
 # Suppression des . et transformation colonne en FLOAT
-  , CAST(REPLACE(Average_market_value_2023_2024,".","") AS FLOAT64) AS Average_market_value
-  , CAST(REPLACE(Total_market_value_2023_2024,".","") AS FLOAT64) AS Total_market_value
+Â  , CAST(REPLACE(Average_market_value_2023_2024,".","") AS FLOAT64) AS Average_market_value
+Â  , CAST(REPLACE(Total_market_value_2023_2024,".","") AS FLOAT64) AS Total_market_value
 FROM s2
 
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_financier_Average_Market_value_per_player_all_season
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_financier_Average_Market_value_per_player_all_season
 -- ========================================
-SELECT  
-  tab2.Club_table_affluence AS Club
-  , tab1.current_club_name
-  , tab1.last_season
-  , ROUND(AVG(tab1.market_value_in_eur),2) AS Average_market_value_per_player
-  , COUNT(*) AS Number_of_player
+
+SELECT Â 
+Â  tab2.Club_table_affluence AS Club
+Â  , tab1.current_club_name
+Â  , tab1.last_season
+Â  , ROUND(AVG(tab1.market_value_in_eur),2) AS Average_market_value_per_player
+Â  , COUNT(*) AS Number_of_player
 FROM ` project_id.dataset_id.players` AS tab1
 LEFT JOIN project_id.dataset_id.PK_KPI_financier AS tab2
 ON tab1.current_club_name = tab2.Club_table_clubs
 WHERE current_club_domestic_competition_id IN("L1","FR1","ES1","IT1","GB1")
 GROUP BY Club
-  , tab1.current_club_name
-  , tab1.last_season
+Â  , tab1.current_club_name
+Â  , tab1.last_season
 ORDER BY Club
-  , tab1.current_club_name
-  , tab1.last_season
+Â  , tab1.current_club_name
+Â  , tab1.last_season
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : transfert_achat
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : transfert_achat
 -- ========================================
-SELECT  
-  tab1.*
-  , tab2.name
+
+SELECT Â 
+Â  tab1.*
+Â  , tab2.name
 FROM ` project_id.dataset_id.transfers` AS tab1
 LEFT JOIN project_id.dataset_id.clubs AS tab2
 ON tab1.to_club_id = tab2.club_id
@@ -546,12 +573,13 @@ ON tab1.to_club_id = tab2.club_id
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : transfert_vente
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : transfert_vente
 -- ========================================
-SELECT  
-  tab1.*
-  , tab2.name
+
+SELECT Â 
+Â  tab1.*
+Â  , tab2.name
 FROM ` project_id.dataset_id.transfers` AS tab1
 LEFT JOIN project_id.dataset_id.clubs AS tab2
 ON tab1.from_club_id = tab2.club_id
@@ -559,9 +587,10 @@ ON tab1.from_club_id = tab2.club_id
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : win_rate_club_name
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : win_rate_club_name
 -- ========================================
+
 SELECT
 primary_key.Club_table_affluence,
 win_rate_club_name.*
@@ -573,18 +602,19 @@ ORDER BY win_rate DESC
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : Sportif_moyenne_age
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : Sportif_moyenne_age
 -- ========================================
-#calcul de la moyenne d'âge des joueurs par club, arrondi à 2 décimales
+
+#calcul de la moyenne d'Ã¢ge des joueurs par club, arrondi Ã  2 dÃ©cimales
 
 WITH average_age AS (SELECT
-  current_club_name,
-  COUNT (current_club_name) AS team,
-  ROUND(AVG(DATE_DIFF(CURRENT_DATE(), DATE(p.date_of_birth), YEAR)), 2) AS avg_age
+Â  current_club_name,
+Â  COUNT (current_club_name) AS team,
+Â  ROUND(AVG(DATE_DIFF(CURRENT_DATE(), DATE(p.date_of_birth), YEAR)), 2) AS avg_age
 FROM ` project_id.dataset_id.players` AS p
 JOIN ` project_id.dataset_id.clubs` AS c
-  ON p.current_club_id = c.club_id
+Â  ON p.current_club_id = c.club_id
 WHERE p.last_season = 2024
 GROUP BY current_club_name
 ORDER BY avg_age, current_club_name ASC
@@ -608,34 +638,36 @@ WHERE Club_table_clubs IS NOT NULL
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : Sportif_moyenne_age_joueurs_par_club
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : Sportif_moyenne_age_joueurs_par_club
 -- ========================================
-#calcul de la moyenne d'âge des joueurs par club, arrondi à 2 décimales
+
+#calcul de la moyenne d'Ã¢ge des joueurs par club, arrondi Ã  2 dÃ©cimales
 
 SELECT
-  c.name AS club_name,
-  ROUND(AVG(DATE_DIFF(CURRENT_DATE(), DATE(p.date_of_birth), YEAR)), 2) AS avg_age
+Â  c.name AS club_name,
+Â  ROUND(AVG(DATE_DIFF(CURRENT_DATE(), DATE(p.date_of_birth), YEAR)), 2) AS avg_age
 FROM ` project_id.dataset_id.players` AS p
 JOIN ` project_id.dataset_id.clubs` AS c
-  ON p.current_club_id = c.club_id
+Â  ON p.current_club_id = c.club_id
 GROUP BY c.name
 ORDER BY avg_age ASC;
 
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : Sportif_moyenneminutesjouéesparU23
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : Sportif_moyenneminutesjouÃ©esparU23
 -- ========================================
+
 SELECT
-  c.name AS club_name,
-  ROUND(AVG(a.minutes_played), 2) AS avg_minutes_u23
+Â  c.name AS club_name,
+Â  ROUND(AVG(a.minutes_played), 2) AS avg_minutes_u23
 FROM ` project_id.dataset_id.appearances` AS a
 JOIN ` project_id.dataset_id.players` AS p 
-  ON a.player_id = p.player_id
+Â  ON a.player_id = p.player_id
 JOIN ` project_id.dataset_id.clubs` AS c 
-  ON p.current_club_id = c.club_id
+Â  ON p.current_club_id = c.club_id
 WHERE DATE_DIFF(CURRENT_DATE(), DATE(p.date_of_birth), YEAR) < 23
 GROUP BY c.name
 ORDER BY avg_minutes_u23 DESC;
@@ -643,89 +675,91 @@ ORDER BY avg_minutes_u23 DESC;
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : Sportif_potentiel_club_taux_croissance
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : Sportif_potentiel_club_taux_croissance
 -- ========================================
+
 WITH
-  -- 1. Nettoyage  (25-26)
-  Data_25_26 AS (
-    SELECT
-      t1.Club,
-      t1.Pays,
-      t1.Division,
-      t1.___age AS Age_Moyen_25_26,
-      SAFE_CAST(t1.Level AS INT64) AS Level_25_26,
-      -- Conversion de 'm' en nombre (FLOAT64)
-      SAFE_CAST(REPLACE(REPLACE(LOWER(t1.Total_market_value_2025_2026), '€', ''), 'm', '') AS FLOAT64) * 1000000.0 AS Total_Value_25_26
-    FROM 
-      ` project_id.dataset_id.Evolution_valeur_marchande_25_26` t1
-    WHERE 
-      t1.Total_market_value_2025_2026 IS NOT NULL AND t1.___age IS NOT NULL
-  ),
+Â  -- 1. Nettoyage Â (25-26)
+Â  Data_25_26 AS (
+Â  Â  SELECT
+Â  Â  Â  t1.Club,
+Â  Â  Â  t1.Pays,
+Â  Â  Â  t1.Division,
+Â  Â  Â  t1.___age AS Age_Moyen_25_26,
+Â  Â  Â  SAFE_CAST(t1.Level AS INT64) AS Level_25_26,
+Â  Â  Â  -- Conversion de 'm' en nombre (FLOAT64)
+Â  Â  Â  SAFE_CAST(REPLACE(REPLACE(LOWER(t1.Total_market_value_2025_2026), 'â‚¬', ''), 'm', '') AS FLOAT64) * 1000000.0 AS Total_Value_25_26
+Â  Â  FROM 
+Â  Â  Â  ` project_id.dataset_id.Evolution_valeur_marchande_25_26` t1
+Â  Â  WHERE 
+Â  Â  Â  t1.Total_market_value_2025_2026 IS NOT NULL AND t1.___age IS NOT NULL
+Â  ),
 
-  -- 2. Nettoyage(24-25)
-  Data_24_25 AS (
-    SELECT
-      t2.Club,
-      -- Conversion de 'm''' en nombre 
-      SAFE_CAST(REPLACE(REPLACE(LOWER(t2.Total_market_value_2024_2025), '€', ''), 'm', '') AS FLOAT64) * 1000000.0 AS Total_Value_24_25
-    FROM 
-      ` project_id.dataset_id.Evolution_valeur_marchande_24_25` t2
-    WHERE 
-      t2.Total_market_value_2024_2025 IS NOT NULL
-  )
+Â  -- 2. Nettoyage(24-25)
+Â  Data_24_25 AS (
+Â  Â  SELECT
+Â  Â  Â  t2.Club,
+Â  Â  Â  -- Conversion de 'm''' en nombre 
+Â  Â  Â  SAFE_CAST(REPLACE(REPLACE(LOWER(t2.Total_market_value_2024_2025), 'â‚¬', ''), 'm', '') AS FLOAT64) * 1000000.0 AS Total_Value_24_25
+Â  Â  FROM 
+Â  Â  Â  ` project_id.dataset_id.Evolution_valeur_marchande_24_25` t2
+Â  Â  WHERE 
+Â  Â  Â  t2.Total_market_value_2024_2025 IS NOT NULL
+Â  )
 
--- 3. Jointure et Calcul du Potentiel Pondéré
+-- 3. Jointure et Calcul du Potentiel PondÃ©rÃ©
 SELECT
-  d25.Club,
-  d25.Pays,
-  d25.Division,
-  d25.Age_Moyen_25_26,
-  CAST(d25.Total_Value_25_26 AS INT64) AS Total_Value_25_26_Unites, 
-  
-  -- Taux de croissance 
-  SAFE_DIVIDE((d25.Total_Value_25_26 - d24.Total_Value_24_25), d25.Total_Value_25_26) AS Progression_Taux_Club,
+Â  d25.Club,
+Â  d25.Pays,
+Â  d25.Division,
+Â  d25.Age_Moyen_25_26,
+Â  CAST(d25.Total_Value_25_26 AS INT64) AS Total_Value_25_26_Unites, 
+Â  
+Â  -- Taux de croissance 
+Â  SAFE_DIVIDE((d25.Total_Value_25_26 - d24.Total_Value_24_25), d25.Total_Value_25_26) AS Progression_Taux_Club,
 
-  -- SCORE FINAL : Taux de Croissance * Facteur de Jeunesse
-  (
-    SAFE_DIVIDE((d25.Total_Value_25_26 - d24.Total_Value_24_25), d24.Total_Value_24_25) * (CASE
-        -- Haut Potentiel : Âge moyen < 23 ans (facteur 2.0x)
-        WHEN d25.Age_Moyen_25_26 < 23 THEN 2.0
-        -- Jeunes : Âge moyen entre 23 et 25 ans (facteur 1.5x)
-        WHEN d25.Age_Moyen_25_26 >= 23 AND d25.Age_Moyen_25_26 < 25 THEN 1.5
-        -- Moins Intéressant : Âge moyen >= 25 ans (facteur 1.0x)
-        ELSE 1.0
-    END)
-  ) AS Score_Potentiel
-  
+Â  -- SCORE FINAL : Taux de Croissance * Facteur de Jeunesse
+Â  (
+Â  Â  SAFE_DIVIDE((d25.Total_Value_25_26 - d24.Total_Value_24_25), d24.Total_Value_24_25) * (CASE
+Â  Â  Â  Â  -- Haut Potentiel : Ã‚ge moyen < 23 ans (facteur 2.0x)
+Â  Â  Â  Â  WHEN d25.Age_Moyen_25_26 < 23 THEN 2.0
+Â  Â  Â  Â  -- Jeunes : Ã‚ge moyen entre 23 et 25 ans (facteur 1.5x)
+Â  Â  Â  Â  WHEN d25.Age_Moyen_25_26 >= 23 AND d25.Age_Moyen_25_26 < 25 THEN 1.5
+Â  Â  Â  Â  -- Moins IntÃ©ressant : Ã‚ge moyen >= 25 ans (facteur 1.0x)
+Â  Â  Â  Â  ELSE 1.0
+Â  Â  END)
+Â  ) AS Score_Potentiel
+Â  
 FROM
-  Data_25_26 d25
+Â  Data_25_26 d25
 INNER JOIN
-  Data_24_25 d24 ON d25.Club = d24.Club
+Â  Data_24_25 d24 ON d25.Club = d24.Club
 
 WHERE
-  d25.Total_Value_25_26 IS NOT NULL 
-  AND d24.Total_Value_24_25 > 0 
-  
-  
+Â  d25.Total_Value_25_26 IS NOT NULL 
+Â  AND d24.Total_Value_24_25 > 0 
+Â  
+Â  
 ORDER BY
-  Progression_Taux_Club DESC
+Â  Progression_Taux_Club DESC
 ;
 
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : Sportif_pourcentageminutes_joueurs_formés_club
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : Sportif_pourcentageminutes_joueurs_formÃ©s_club
 -- ========================================
-#average minute per player passé dans le centre de formation et indice de formation
+
+#average minute per player passÃ© dans le centre de formation et indice de formation
 SELECT
-  Club AS club_name,
- SUM(CAST(REPLACE(CAST(Minutes_Jouees AS STRING), ' ', '') AS INT64)) AS sum_minutes,
-  SUM(CAST(REPLACE(CAST(Nombre_Joueurs AS STRING), ' ', '') AS INT64)) AS sum_players
-  , SUM(CAST(REPLACE(CAST(Minutes_Jouees AS STRING), ' ', '') AS INT64)) /
-  SUM(CAST(REPLACE(CAST(Nombre_Joueurs AS STRING), ' ', '') AS INT64)) AS avg_minutes_per_player
-  ,Indice_Formation AS indice_formation
+Â  Club AS club_name,
+Â SUM(CAST(REPLACE(CAST(Minutes_Jouees AS STRING), ' ', '') AS INT64)) AS sum_minutes,
+Â  SUM(CAST(REPLACE(CAST(Nombre_Joueurs AS STRING), ' ', '') AS INT64)) AS sum_players
+Â  , SUM(CAST(REPLACE(CAST(Minutes_Jouees AS STRING), ' ', '') AS INT64)) /
+Â  SUM(CAST(REPLACE(CAST(Nombre_Joueurs AS STRING), ' ', '') AS INT64)) AS avg_minutes_per_player
+Â  ,Indice_Formation AS indice_formation
 FROM ` project_id.dataset_id.Centre_de_formation_raw`
 GROUP BY Club, Indice_Formation
 ORDER BY avg_minutes_per_player DESC;
@@ -733,68 +767,57 @@ ORDER BY avg_minutes_per_player DESC;
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_Sportif_win_rate
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_Sportif_win_rate
 -- ========================================
+
 # taux de win 
 
 SELECT
-  cg.club_id,
-  season,
-  COUNT(*) AS total_games, 
-  SUM(is_win) AS total_wins,      
-  ROUND(SUM(is_win) / COUNT(*), 2) AS win_rate 
+Â  cg.club_id,
+Â  season,
+Â  COUNT(*) AS total_games, 
+Â  SUM(is_win) AS total_wins, Â  Â  Â 
+Â  ROUND(SUM(is_win) / COUNT(*), 2) AS win_rate 
 FROM ` project_id.dataset_id.club_games` AS cg
 JOIN ` project_id.dataset_id.games` AS g
-  ON g.game_id = cg.game_id
+Â  ON g.game_id = cg.game_id
 GROUP BY cg.club_id, season;
 
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_Sportif_participation_competition_europeenne
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : KPI_Sportif_participation_competition_europeenne
 -- ========================================
+
 SELECT
 
-  primary_key.Club_table_affluence,
-  Pays,
-  Position,
-  SAFE_CAST(Points AS FLOAT64) AS points
+Â  primary_key.Club_table_affluence,
+Â  Pays,
+Â  Position,
+Â  SAFE_CAST(Points AS FLOAT64) AS points
 FROM ` project_id.dataset_id.Coefficient_clubs_UEFA_clean` AS u
 
 LEFT JOIN project_id.dataset_id.KPI_sportif_v2 AS primary_key
-ON  primary_key.Club_table_coef_UEFA= u.Club_clean 
+ON Â primary_key.Club_table_coef_UEFA= u.Club_clean 
 ORDER BY points DESC;
 
 
 
 -- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : POPULARITE_evolution_indicateurs_affluence
+-- DATA FC - ModÃ©lisation des donnÃ©es clubs
+-- TableÂ : POPULARITE_evolution_indicateurs_affluence
 -- ========================================
-#Union des tables d’affluence 22-23 et 24-25, afin de créer les indicateurs pour comparer les 2 années
+
+#Union des tables dâ€™affluence 22-23 et 24-25, afin de crÃ©er les indicateurs pour comparer les 2 annÃ©es
 SELECT DISTINCT
-  pop24_25.Club,
-  pop24_25.Stade,
-  pop24_25.Capacite,
-  ROUND((pop24_25.Nombre_total_spectateurs_saison - pop22_23.Nombre_total_spectateurs_saison)/pop24_25.Nombre_total_spectateurs_saison,2) AS Evolution_nombre_total_spectateurs,
-  ROUND((pop24_25.Moyenne_affluence_match-pop22_23.Moyenne_affluence_match)/pop24_25.Moyenne_affluence_match,2) AS Evolution_moyenne_affluence_match,
-  ROUND((pop24_25.Pourcentage_Remplissage-pop22_23.Pourcentage_Remplissage)/pop24_25.Pourcentage_Remplissage,2) AS Evolution_pourcentage_remplissage
+Â  pop24_25.Club,
+Â  pop24_25.Stade,
+Â  pop24_25.Capacite,
+Â  ROUND((pop24_25.Nombre_total_spectateurs_saison - pop22_23.Nombre_total_spectateurs_saison)/pop24_25.Nombre_total_spectateurs_saison,2) AS Evolution_nombre_total_spectateurs,
+Â  ROUND((pop24_25.Moyenne_affluence_match-pop22_23.Moyenne_affluence_match)/pop24_25.Moyenne_affluence_match,2) AS Evolution_moyenne_affluence_match,
+Â  ROUND((pop24_25.Pourcentage_Remplissage-pop22_23.Pourcentage_Remplissage)/pop24_25.Pourcentage_Remplissage,2) AS Evolution_pourcentage_remplissage
 FROM ` project_id.dataset_id.POPULARITE_affluence_24-25` AS pop24_25
 LEFT JOIN ` project_id.dataset_id.POPULARITE_affluence_22-23` AS pop22_23
-  USING(Club)
-
-
-
-
-
-
-
-
--- ========================================
--- DATA FC - Modélisation des données clubs
--- Table : KPI_Sportif_win_rate
--- ========================================
-
-project_id.dataset_id
+Â  USING(Club)
